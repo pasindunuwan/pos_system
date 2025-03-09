@@ -63,15 +63,42 @@ const deleteOrder = async (req, resp) => {
   }
 };
 
-const findCustomer = async (req, resp) => {
+const findOrder = async (req, resp) => {
   try {
-    const selectedCustomer = await customer.findById(req.params.id);
-    if (selectedCustomer) {
-      resp.status(201).json({ messge: "customer found", data: deleteCustomer });
+    const selectedOrder = await customer.findById(req.params.id);
+    if (selectedOrder) {
+      resp.status(201).json({ messge: "order found", data: selectedOrder });
     }
-    resp.status(404).json({ messge: "customer not found" });
+    resp.status(404).json({ messge: "order not found" });
   } catch {
     resp.status(500).json({ error: e.message });
   }
 };
-module.exports = { saveOrder, updateOrderStatus, updateOrder, deleteOrder };
+const loadAllOrder = async (req, resp) => {
+  //manager admin
+  try {
+    const { page = 1, size = 10 } = req.query;
+
+    const orderList = await customer
+      .find()
+      .sort({ Date: 1 })
+      .skip((page - 1) * size)
+      .limit(parseInt(size));
+    const total = await customer.countDocuments();
+
+    resp.status(200).json({
+      messge: "data list",
+      data: { orderList: orderList, count: total },
+    });
+  } catch {
+    resp.status(500).json({ error: e.message });
+  }
+};
+module.exports = {
+  saveOrder,
+  updateOrderStatus,
+  updateOrder,
+  deleteOrder,
+  findOrder,
+  loadAllOrder,
+};

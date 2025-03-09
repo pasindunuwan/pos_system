@@ -5,7 +5,7 @@ require("dotenv").config();
 const PORT = process.env.PORT | 3000;
 
 //------------------------
-const CustomerRoute = require("./route/customerRoute");
+const CustomerRoute = require("./route/CustomerRoute");
 const OrderRoute = require("./route/orderRoute");
 const PaymentRoute = require("./route/paymentRoute");
 const ProductRoute = require("./route/productRoute");

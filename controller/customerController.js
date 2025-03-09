@@ -7,7 +7,7 @@ const saveCustomer = async (req, resp) => {
     const createCustomer = new customer(req.body);
     const savedCustomer = await createCustomer.save();
     resp.status(201).json({ data: savedCustomer });
-  } catch {
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -48,7 +48,9 @@ const findCustomer = async (req, resp) => {
   try {
     const selectedCustomer = await customer.findById(req.params.id);
     if (selectedCustomer) {
-      resp.status(201).json({ messge: "customer found", data: deleteCustomer });
+      resp
+        .status(201)
+        .json({ messge: "customer found", data: selectedCustomer });
     }
     resp.status(404).json({ messge: "customer not found" });
   } catch {
@@ -70,16 +72,14 @@ const loadAllCustomer = async (req, resp) => {
     const customerList = await customer
       .find(filter)
       .skip((page - 1) * size)
-      .limit(10);
+      .limit(parseInt(size));
     const total = await customer.countDocuments(filter);
 
-    resp
-      .status(200)
-      .json({
-        messge: "data list",
-        data: { dataList: customerList, count: total },
-      });
-  } catch {
+    resp.status(200).json({
+      messge: "data list",
+      data: { dataList: customerList, count: total },
+    });
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
