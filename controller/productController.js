@@ -24,8 +24,10 @@ const updateProduct = async (req, resp) => {
     if (updateProduct) {
       resp.status(201).json({ messge: "product updated", data: updateProduct });
     }
-    resp.status(404).json({ messge: "product not found" });
-  } catch {
+    if (!updateProduct) {
+      resp.status(404).json({ messge: "product not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -38,18 +40,20 @@ const deleteProduct = async (req, resp) => {
         .json({ messge: "Product deleted", data: deletedProduct });
     }
     resp.status(404).json({ messge: "Product not found" });
-  } catch {
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
 const findProduct = async (req, resp) => {
   try {
-    const selectedProduct = await customer.findById(req.params.id);
+    const selectedProduct = await Product.findById(req.params.id);
     if (selectedProduct) {
       resp.status(201).json({ messge: "Product found", data: selectedProduct });
     }
-    resp.status(404).json({ messge: "Product not found" });
-  } catch {
+    if (!selectedProduct) {
+      resp.status(404).json({ messge: "Product not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };

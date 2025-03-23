@@ -21,26 +21,28 @@ const updateCustomer = async (req, resp) => {
         new: true,
       }
     );
-    if (updateCustomer) {
+    if (updatedCustomer) {
       resp
         .status(201)
-        .json({ messge: "customer updated", data: updateCustomer });
+        .json({ messge: "customer updated", data: updatedCustomer });
     }
     resp.status(404).json({ messge: "customer not found" });
-  } catch {
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
 const deleteCustomer = async (req, resp) => {
   try {
-    const deleteCustomer = await customer.findByIdAndDelete(req.params.id);
+    const deletedCustomer = await customer.findByIdAndDelete(req.params.id);
     if (deletedCustomer) {
       resp
         .status(201)
-        .json({ messge: "customer deleted", data: deleteCustomer });
+        .json({ messge: "customer deleted", data: deletedCustomer });
     }
-    resp.status(404).json({ messge: "customer not found" });
-  } catch {
+    if (!deletedCustomer) {
+      resp.status(404).json({ messge: "customer not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -48,12 +50,14 @@ const findCustomer = async (req, resp) => {
   try {
     const selectedCustomer = await customer.findById(req.params.id);
     if (selectedCustomer) {
-      resp
+      return resp
         .status(201)
         .json({ messge: "customer found", data: selectedCustomer });
     }
-    resp.status(404).json({ messge: "customer not found" });
-  } catch {
+    if (!selectedCustomer) {
+      resp.status(404).json({ messge: "customer not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -65,7 +69,7 @@ const loadAllCustomer = async (req, resp) => {
           $or: [
             { customerName: { $regex: searchText, $options: "i" } },
             { address: { $regex: searchText, $options: "i" } },
-            { email: { $regex: searchText }, $options: "i" },
+            { email: { $regex: searchText, $options: "i" } },
           ],
         }
       : {};

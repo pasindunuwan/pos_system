@@ -1,18 +1,19 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
-const user = require("../model/userSchema");
+const User = require("../model/userSchema");
 
 //function
 const signup = async (req, resp) => {
   const { username, password, fullName, role } = req.body;
-  const userExists = await user.findOne({ username });
+  const userExists = await User.findOne({ username });
   if (userExists) {
     return resp.status(400).json({ message: "already exists", data: null });
   }
   try {
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const createdUser = new User({
       username,
       password: hashedPassword,
@@ -27,21 +28,36 @@ const signup = async (req, resp) => {
   }
 };
 const login = async (req, resp) => {
-  const { username, password } = req.body;
-  const userExists = await user.findOne({ username });
-  if (!userExists) {
-    resp.status(404).json({ message: "not found", data: null });
+  try {
+    const { username, password } = req.body;
+
+    // Check if the user exists
+    const userExists = await User.findOne({ username });
+    if (!userExists) {
+      return resp.status(404).json({ message: "User not found", data: null });
+    }
+
+    // Compare provided password with hashed password
+    const isMatch = await bcrypt.compare(password, userExists.password);
+    if (!isMatch) {
+      return resp.status(403).json({ message: "Wrong password", data: null });
+    }
+
+    // Generate JWT token
+    const payload = {
+      userId: userExists._id,
+      username: userExists.username,
+      role: userExists.role,
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+
+    return resp
+      .status(200)
+      .json({ message: "Login successful", data: { token } });
+  } catch (error) {
+    return resp.status(500).json({ error: e.message });
   }
-  const isMatch = await bcrypt.compare(password, userExists.password);
-  if (!isMatch) {
-    return resp.status(403).json({ message: "wrong password", data: null });
-  }
-  const payload = {
-    userId: userExists._id,
-    username: userExists.username,
-    role: userExists.role,
-  };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
-  return resp.status(200).json({ message: "success", data: { token: token } });
 };
+
 module.exports = { signup, login };

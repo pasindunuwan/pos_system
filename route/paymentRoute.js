@@ -9,7 +9,7 @@ router.post(
   paymentController.makePayment
 );
 router.get(
-  "/income-by-month",
+  "/income-Today",
   verifyToken(["admin", "manager"]),
   paymentController.findIncomeToday
 );

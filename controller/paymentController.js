@@ -14,20 +14,25 @@ const makePayment = async (req, resp) => {
 const findIncomeToday = async (req, resp) => {
   //admin//manager
   try {
-    const { day } = req.query; //yyyy-MM-DD
-    const startDay = new Date(day);
-    const endDay = new Date(day);
-    endDay.setDate(endDay.getDate() + 1);
+    const { day } = req.body; // Read from JSON body instead of query
 
-    const data = await Payment.find({
-      Date: {
-        $gte: startDay,
-        $lt: endDay,
-      },
+    if (!day || isNaN(Date.parse(day))) {
+      return resp
+        .status(400)
+        .json({ error: "Invalid date format. Use YYYY-MM-DD." });
+    }
+
+    const startDay = new Date(`${day}T00:00:00.000Z`);
+    const endDay = new Date(startDay);
+    endDay.setUTCDate(endDay.getUTCDate() + 1);
+
+    const data = await payment.find({
+      date: { $gte: startDay, $lt: endDay },
     });
+
     const totalIncome = data.reduce((sum, payment) => sum + payment.amount, 0);
 
-    resp.status(200).json({ message: "today's income", data: totalIncome });
+    resp.status(200).json({ message: "Today's income", data: totalIncome });
   } catch (e) {
     resp.status(500).json({ error: e.message });
   }
@@ -36,27 +41,26 @@ const findIncomeByCurrentMonth = async (req, resp) => {
   //admin//manager
   try {
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear, now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear, now.getMonth() + 1, 1);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    const data = await Payment.find({
-      Date: {
+    const data = await payment.find({
+      date: {
         $gte: startOfMonth,
         $lt: endOfMonth,
       },
     });
-    const incomebyDay = data.reduce((ACC, payment) => {
-      const day = payment.Date.toISOString().split("T")[0]; //[date,time]
+
+    const incomeByDay = data.reduce((acc, payment) => {
+      const day = payment.date.toISOString().split("T")[0]; //[date, time]
       acc[day] = (acc[day] || 0) + payment.amount;
       return acc;
     }, {});
 
-    resp
-      .status(200)
-      .json({
-        message: "month income",
-        data: { month: now.getMonth() + 1, income: incomebyDay },
-      });
+    resp.status(200).json({
+      message: "Monthly income",
+      data: { month: now.getMonth() + 1, income: incomeByDay },
+    });
   } catch (e) {
     resp.status(500).json({ error: e.message });
   }

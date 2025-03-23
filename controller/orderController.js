@@ -3,7 +3,7 @@ const order = require("../model/orderSchema");
 const saveOrder = async (req, resp) => {
   //admin//manager
   try {
-    const createOrder = new Order(req.body);
+    const createOrder = new order(req.body);
     const savedOrder = await createOrder.save();
     resp.status(201).json({ message: "order saved", data: savedOrder });
   } catch (e) {
@@ -13,7 +13,7 @@ const saveOrder = async (req, resp) => {
 const updateOrder = async (req, resp) => {
   //admin//manager
   try {
-    const updatedOrder = await customer.findByIdAndUpdate(
+    const updatedOrder = await order.findByIdAndUpdate(
       req.params.id,
       req.body,
       {
@@ -23,8 +23,10 @@ const updateOrder = async (req, resp) => {
     if (updatedOrder) {
       resp.status(201).json({ messge: "order updated", data: updatedOrder });
     }
-    resp.status(404).json({ messge: "order not found" });
-  } catch {
+    if (!updatedOrder) {
+      resp.status(404).json({ messge: "order not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -36,7 +38,7 @@ const updateOrderStatus = async (req, resp) => {
     if (!["PENDING", "REJECTED", "COMPLETED", "CANSELLED"].includes(status)) {
       return resp.status(400).json({ message: "invslid status" });
     }
-    const updatedorder = await customer.findByIdAndUpdate(
+    const updatedorder = await order.findByIdAndUpdate(
       id,
       { status },
       {
@@ -46,31 +48,37 @@ const updateOrderStatus = async (req, resp) => {
     if (updatedorder) {
       resp.status(201).json({ messge: "order updated", data: updatedorder });
     }
-    resp.status(404).json({ messge: "order not found" });
-  } catch {
+    if (!updatedorder) {
+      resp.status(404).json({ messge: "order not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
 const deleteOrder = async (req, resp) => {
   try {
-    const deleteOrder = await customer.findByIdAndDelete(req.params.id);
+    const deleteOrder = await order.findByIdAndDelete(req.params.id);
     if (deleteOrder) {
       resp.status(201).json({ messge: "order deleted", data: deleteOrder });
     }
-    resp.status(404).json({ messge: "order not found" });
-  } catch {
+    if (!deleteOrder) {
+      resp.status(404).json({ messge: "order not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
 
 const findOrder = async (req, resp) => {
   try {
-    const selectedOrder = await customer.findById(req.params.id);
+    const selectedOrder = await order.findById(req.params.id);
     if (selectedOrder) {
       resp.status(201).json({ messge: "order found", data: selectedOrder });
     }
-    resp.status(404).json({ messge: "order not found" });
-  } catch {
+    if (!selectedOrder) {
+      resp.status(404).json({ messge: "order not found" });
+    }
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
@@ -79,18 +87,18 @@ const loadAllOrder = async (req, resp) => {
   try {
     const { page = 1, size = 10 } = req.query;
 
-    const orderList = await customer
+    const orderList = await order
       .find()
       .sort({ Date: 1 })
       .skip((page - 1) * size)
       .limit(parseInt(size));
-    const total = await customer.countDocuments();
+    const total = await order.countDocuments();
 
     resp.status(200).json({
       messge: "data list",
       data: { orderList: orderList, count: total },
     });
-  } catch {
+  } catch (e) {
     resp.status(500).json({ error: e.message });
   }
 };
